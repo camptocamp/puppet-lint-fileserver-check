@@ -19,7 +19,26 @@ describe 'fileserver' do
       end
     end
 
-    context 'code using fileserver' do
+    context 'code using fileserver with file:///' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure => file,
+          source => 'file:///foo/bar',
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(3).in_column(11)
+      end
+    end
+
+    context 'code using fileserver with puppet:///' do
       let(:code) {
         <<-EOS
         file { 'foo':
@@ -86,7 +105,39 @@ describe 'fileserver' do
       end
     end
 
-    context 'code using fileserver' do
+    context 'code using fileserver with file:///' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure => file,
+          source => 'file:///foo/bar',
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should fix the problem' do
+        pending 'Throw errors...'
+        expect(problems).to contain_fixed(msg).on_line(1).in_column(11)
+      end
+
+      it 'should add a newline to the end of the manifest' do
+        pending 'Need work'
+        expect(manifest).to eq(
+          <<-EOS
+        file { 'foo':
+          ensure => file,
+          content => file('/foo/bar'),
+        }
+        EOS
+        )
+      end
+    end
+
+    context 'code using fileserver with puppet:///' do
       let(:code) {
         <<-EOS
         file { 'foo':
