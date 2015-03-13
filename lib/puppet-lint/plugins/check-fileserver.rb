@@ -20,7 +20,11 @@ PuppetLint.new_check(:fileserver) do
   def fix(problem)
     problem[:token].value = 'content'
     file = problem[:token].next_code_token.next_code_token
-    file.value.sub!(/puppet:\/\/\/modules\/(.*)/, "file('\\1')")
+    if file.type == :DQPRE
+      file.value.sub!(/puppet:\/\/\/modules\/(.*)/, "file(")
+    else
+      file.value.sub!(/puppet:\/\/\/modules\/(.*)/, "file('\\1')")
+    end
     file.type = :NAME
   end
 end

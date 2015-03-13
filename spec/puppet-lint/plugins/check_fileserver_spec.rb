@@ -37,6 +37,25 @@ describe 'fileserver' do
         expect(problems).to contain_warning(msg).on_line(3).in_column(11)
       end
     end
+
+    context 'code using $module_name' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure => file,
+          source => "puppet:///modules/${module_name}/bar",
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(3).in_column(11)
+      end
+    end
   end
 
   context 'with fix enabled' do
@@ -92,6 +111,38 @@ describe 'fileserver' do
         file { 'foo':
           ensure => file,
           content => file('foo/bar'),
+        }
+        EOS
+        )
+      end
+    end
+
+    context 'code using $module_name' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure => file,
+          source => "puppet:///modules/${module_name}/bar",
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should fix the problem' do
+        pending 'Throw errors...'
+        expect(problems).to contain_fixed(msg).on_line(1).in_column(11)
+      end
+
+      it 'should add a newline to the end of the manifest' do
+        pending 'Need work'
+        expect(manifest).to eq(
+          <<-EOS
+        file { 'foo':
+          ensure => file,
+          content => file("${module_name}/bar"),
         }
         EOS
         )
