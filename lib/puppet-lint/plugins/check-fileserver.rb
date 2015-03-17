@@ -16,12 +16,12 @@ PuppetLint.new_check(:fileserver) do
   end
 
   def fix(problem)
-    if problem[:token].type == :SSTRING
+    if problem[:resource][:type].value == 'file' && problem[:token].type == :SSTRING
       problem[:token].prev_code_token.prev_code_token.value = 'content'
       problem[:token].value.sub!(%r{^puppet:///modules/(.*)}, "file('\\1')")
       problem[:token].type = :NAME
     else
-      raise PuppetLint::NoFix, "Not fixing string with variables"
+      raise PuppetLint::NoFix, "Not fixing"
     end
   end
 end
