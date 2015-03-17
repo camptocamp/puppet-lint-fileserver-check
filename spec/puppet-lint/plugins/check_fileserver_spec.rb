@@ -19,7 +19,7 @@ describe 'fileserver' do
       end
     end
 
-    context 'code using fileserver with file:///' do
+    context 'code using source with file:///' do
       let(:code) {
         <<-EOS
         file { 'foo':
@@ -30,11 +30,7 @@ describe 'fileserver' do
       }
 
       it 'should detect a single problem' do
-        expect(problems).to have(1).problem
-      end
-
-      it 'should create a warning' do
-        expect(problems).to contain_warning(msg).on_line(3).in_column(11)
+        expect(problems).to have(0).problem
       end
     end
 
@@ -53,7 +49,7 @@ describe 'fileserver' do
       end
 
       it 'should create a warning' do
-        expect(problems).to contain_warning(msg).on_line(3).in_column(11)
+        expect(problems).to contain_warning(msg).on_line(3).in_column(21)
       end
     end
 
@@ -72,7 +68,25 @@ describe 'fileserver' do
       end
 
       it 'should create a warning' do
-        expect(problems).to contain_warning(msg).on_line(3).in_column(11)
+        expect(problems).to contain_warning(msg).on_line(3).in_column(21)
+      end
+    end
+
+    context 'when using fileserver not in file resource' do
+      let(:code) {
+        <<-EOS
+        foo { 'foo':
+          file_source => 'puppet:///modules/foo/bar',
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(2).in_column(26)
       end
     end
   end
@@ -105,7 +119,7 @@ describe 'fileserver' do
       end
     end
 
-    context 'code using fileserver with file:///' do
+    context 'code using source with file:///' do
       let(:code) {
         <<-EOS
         file { 'foo':
@@ -116,24 +130,11 @@ describe 'fileserver' do
       }
 
       it 'should detect a single problem' do
-        expect(problems).to have(1).problem
+        expect(problems).to have(0).problem
       end
 
-      it 'should fix the problem' do
-        pending 'Throw errors...'
-        expect(problems).to contain_fixed(msg).on_line(1).in_column(11)
-      end
-
-      it 'should add a newline to the end of the manifest' do
-        pending 'Need work'
-        expect(manifest).to eq(
-          <<-EOS
-        file { 'foo':
-          ensure => file,
-          content => file('/foo/bar'),
-        }
-        EOS
-        )
+      it 'should not modify the manifest' do
+        expect(manifest).to eq(code)
       end
     end
 
@@ -152,8 +153,7 @@ describe 'fileserver' do
       end
 
       it 'should fix the problem' do
-        pending 'Throw errors...'
-        expect(problems).to contain_fixed(msg).on_line(1).in_column(11)
+        expect(problems).to contain_fixed(msg).on_line(3).in_column(21)
       end
 
       it 'should add a newline to the end of the manifest' do
@@ -182,21 +182,12 @@ describe 'fileserver' do
         expect(problems).to have(1).problem
       end
 
-      it 'should fix the problem' do
-        pending 'Throw errors...'
-        expect(problems).to contain_fixed(msg).on_line(1).in_column(11)
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(3).in_column(21)
       end
 
-      it 'should add a newline to the end of the manifest' do
-        pending 'Need work'
-        expect(manifest).to eq(
-          <<-EOS
-        file { 'foo':
-          ensure => file,
-          content => file("${module_name}/bar"),
-        }
-        EOS
-        )
+      it 'should not modify the manifest' do
+        expect(manifest).to eq(code)
       end
     end
   end
