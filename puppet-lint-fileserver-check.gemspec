@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name        = 'puppet-lint-fileserver-check'
-  spec.version     = '1.1.0'
+  spec.version     = '1.1.1'
   spec.homepage    = 'https://github.com/camptocamp/puppet-lint-fileserver-check'
   spec.license     = 'MIT'
   spec.author      = 'Mickaël Canévet'
