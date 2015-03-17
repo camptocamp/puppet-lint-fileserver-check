@@ -182,12 +182,79 @@ describe 'fileserver' do
         expect(problems).to have(1).problem
       end
 
-      it 'should create a warning' do
-        expect(problems).to contain_warning(msg).on_line(3).in_column(21)
+      it 'should fix the problem' do
+        expect(problems).to contain_fixed(msg).on_line(3).in_column(21)
       end
 
-      it 'should not modify the manifest' do
-        expect(manifest).to eq(code)
+      it 'should add a newline to the end of the manifest' do
+        expect(manifest).to eq(
+          <<-EOS
+        file { 'foo':
+          ensure => file,
+          content => file("${module_name}/bar"),
+        }
+        EOS
+        )
+      end
+    end
+
+    context 'code using a variable' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure => file,
+          source => "puppet:///modules/foo/${bar}",
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should fix the problem' do
+        expect(problems).to contain_fixed(msg).on_line(3).in_column(21)
+      end
+
+      it 'should add a newline to the end of the manifest' do
+        expect(manifest).to eq(
+          <<-EOS
+        file { 'foo':
+          ensure => file,
+          content => file("foo/${bar}"),
+        }
+        EOS
+        )
+      end
+    end
+
+    context 'code using two variables' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure => file,
+          source => "puppet:///modules/${module_name}/${bar}",
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should fix the problem' do
+        expect(problems).to contain_fixed(msg).on_line(3).in_column(21)
+      end
+
+      it 'should add a newline to the end of the manifest' do
+        expect(manifest).to eq(
+          <<-EOS
+        file { 'foo':
+          ensure => file,
+          content => file("${module_name}/${bar}"),
+        }
+        EOS
+        )
       end
     end
 
