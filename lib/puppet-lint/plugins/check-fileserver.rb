@@ -16,32 +16,36 @@ PuppetLint.new_check(:fileserver) do
   end
 
   def fix(problem)
-    if problem[:resource][:type].value == 'file' && problem[:token].type == :SSTRING
-      problem[:token].prev_code_token.prev_code_token.value = 'content'
-      problem[:token].value.sub!(%r{^puppet:///modules/(.*)}, "file('\\1')")
-      problem[:token].type = :NAME
-    elsif problem[:token].type == :DQPRE
-      problem[:token].prev_code_token.prev_code_token.value = 'content'
-      file = PuppetLint::Lexer::Token.new(
-        :NAME, 'file',
-        problem[:token].line, problem[:token].column+1
-      )
-      lparen = PuppetLint::Lexer::Token.new(
-        :LPAREN, '(',
-        problem[:token].line, problem[:token].column+1
-      )
-      rparen = PuppetLint::Lexer::Token.new(
-        :RPAREN, ')',
-        problem[:token].line, problem[:token].column+1
-      )
-      tokens.insert(tokens.index(problem[:token]), file)
-      tokens.insert(tokens.index(problem[:token]), lparen)
-      problem[:token].value.sub!(%r{^puppet:///modules/}, '')
-      t = problem[:token].next_code_token
-      while t.type != :DQPOST
-        t = t.next_code_token
+    if problem[:resource][:type].value == 'file'
+      if problem[:token].type == :SSTRING
+        problem[:token].prev_code_token.prev_code_token.value = 'content'
+        problem[:token].value.sub!(%r{^puppet:///modules/(.*)}, "file('\\1')")
+        problem[:token].type = :NAME
+      elsif problem[:token].type == :DQPRE
+        problem[:token].prev_code_token.prev_code_token.value = 'content'
+        file = PuppetLint::Lexer::Token.new(
+          :NAME, 'file',
+          problem[:token].line, problem[:token].column+1
+        )
+        lparen = PuppetLint::Lexer::Token.new(
+          :LPAREN, '(',
+          problem[:token].line, problem[:token].column+1
+        )
+        rparen = PuppetLint::Lexer::Token.new(
+          :RPAREN, ')',
+          problem[:token].line, problem[:token].column+1
+        )
+        tokens.insert(tokens.index(problem[:token]), file)
+        tokens.insert(tokens.index(problem[:token]), lparen)
+        problem[:token].value.sub!(%r{^puppet:///modules/}, '')
+        t = problem[:token].next_code_token
+        while t.type != :DQPOST
+          t = t.next_code_token
+        end
+        tokens.insert(tokens.index(t)+1, rparen)
+      else
+        raise PuppetLint::NoFix, "Not fixing"
       end
-      tokens.insert(tokens.index(t)+1, rparen)
     else
       raise PuppetLint::NoFix, "Not fixing"
     end

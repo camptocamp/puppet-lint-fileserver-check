@@ -89,6 +89,24 @@ describe 'fileserver' do
         expect(problems).to contain_warning(msg).on_line(2).in_column(26)
       end
     end
+
+    context 'when using fileserver not in file resource with variables' do
+      let(:code) {
+        <<-EOS
+        foo { 'foo':
+          file_source => "puppet:///${module_name}/foo/bar",
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(2).in_column(26)
+      end
+    end
   end
 
   context 'with fix enabled' do
@@ -263,6 +281,28 @@ describe 'fileserver' do
         <<-EOS
         foo { 'foo':
           file_source => 'puppet:///modules/foo/bar',
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(2).in_column(26)
+      end
+
+      it 'should not modify the manifest' do
+        expect(manifest).to eq(code)
+      end
+    end
+
+    context 'when using fileserver not in file resource with variables' do
+      let(:code) {
+        <<-EOS
+        foo { 'foo':
+          file_source => "puppet:///${module_name}/foo/bar",
         }
         EOS
       }
