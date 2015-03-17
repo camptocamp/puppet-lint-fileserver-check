@@ -16,7 +16,8 @@ PuppetLint.new_check(:fileserver) do
   end
 
   def fix(problem)
-    if problem[:resource][:type].value == 'file'
+    if problem[:resource][:type].value == 'file' or
+        problem[:resource][:type].value == 'concat::fragment'
       if problem[:token].type == :SSTRING
         problem[:token].prev_code_token.prev_code_token.value = 'content'
         problem[:token].value.sub!(%r{^puppet:///modules/(.*)}, "file('\\1')")

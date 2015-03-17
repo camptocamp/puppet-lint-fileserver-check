@@ -72,6 +72,25 @@ describe 'fileserver' do
       end
     end
 
+    context 'when using fileserver in concat::fragment' do
+      let(:code) {
+        <<-EOS
+        concat::fragment { 'foo':
+          ensure => present,
+          source => 'puppet:///modules/foo/bar',
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should create a warning' do
+        expect(problems).to contain_warning(msg).on_line(3).in_column(21)
+      end
+    end
+
     context 'when using fileserver not in file resource' do
       let(:code) {
         <<-EOS
@@ -210,6 +229,37 @@ describe 'fileserver' do
         file { 'foo':
           ensure => file,
           content => file("${module_name}/bar"),
+        }
+        EOS
+        )
+      end
+    end
+
+
+    context 'when using fileserver in concat::fragment' do
+      let(:code) {
+        <<-EOS
+        concat::fragment { 'foo':
+          ensure => present,
+          source => 'puppet:///modules/foo/bar',
+        }
+        EOS
+      }
+
+      it 'should detect a single problem' do
+        expect(problems).to have(1).problem
+      end
+
+      it 'should fix the problem' do
+        expect(problems).to contain_fixed(msg).on_line(3).in_column(21)
+      end
+
+      it 'should fix the code' do
+        expect(manifest).to eq(
+          <<-EOS
+        concat::fragment { 'foo':
+          ensure => present,
+          content => file('foo/bar'),
         }
         EOS
         )
