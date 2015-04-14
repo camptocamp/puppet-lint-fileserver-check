@@ -20,7 +20,7 @@ PuppetLint.new_check(:fileserver) do
         problem[:resource][:type].value == 'concat::fragment'
       if problem[:token].type == :SSTRING
         problem[:token].prev_code_token.prev_code_token.value = 'content'
-        problem[:token].value.sub!(%r{^puppet:///modules/(.*)}, "file('\\1')")
+        problem[:token].value.sub!(%r{^puppet:///modules/[^/]+/(.*)}, "file(sprintf('%s/files/\\1', get_module_path($module_name)))")
         problem[:token].type = :NAME
       elsif problem[:token].type == :DQPRE
         problem[:token].prev_code_token.prev_code_token.value = 'content'
@@ -32,18 +32,33 @@ PuppetLint.new_check(:fileserver) do
           :LPAREN, '(',
           problem[:token].line, problem[:token].column+1
         )
+        sprintf = PuppetLint::Lexer::Token.new(
+          :NAME, 'sprintf',
+          problem[:token].line, problem[:token].column+1
+        )
+        comma = PuppetLint::Lexer::Token.new(
+          :COMMA, ',',
+          problem[:token].line, problem[:token].column+1
+        )
         rparen = PuppetLint::Lexer::Token.new(
           :RPAREN, ')',
           problem[:token].line, problem[:token].column+1
         )
         tokens.insert(tokens.index(problem[:token]), file)
         tokens.insert(tokens.index(problem[:token]), lparen)
-        problem[:token].value.sub!(%r{^puppet:///modules/}, '')
-        t = problem[:token].next_code_token
-        while t.type != :DQPOST
-          t = t.next_code_token
+        tokens.insert(tokens.index(problem[:token]), sprintf)
+        tokens.insert(tokens.index(problem[:token]), lparen)
+        puts problem[:token].value
+        if problem[:token].value =~ %r{^puppet:///modules/[^/]+/(.*)}
+          problem[:token].value.sub!(%r{^puppet:///modules/[^/]+/(.*)}, '%s/files/\\1')
+          t = problem[:token].next_code_token
+          while t.type != :DQPOST
+            t = t.next_code_token
+          end
+          tokens.insert(tokens.index(t)+1, rparen)
+        else
+          problem[:token].value.sub!(%r{^puppet:///modules/^}, '%s/files/')
         end
-        tokens.insert(tokens.index(t)+1, rparen)
       else
         raise PuppetLint::NoFix, "Not fixing"
       end
