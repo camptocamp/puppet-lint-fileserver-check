@@ -198,7 +198,7 @@ describe 'fileserver' do
           <<-EOS
         file { 'foo':
           ensure => file,
-          content => file('foo/bar'),
+          content => file(sprintf('%s/files/bar', get_module_path($module_name))),
         }
         EOS
         )
@@ -228,7 +228,7 @@ describe 'fileserver' do
           <<-EOS
         file { 'foo':
           ensure => file,
-          content => file("${module_name}/bar"),
+          content => file(sprintf('%s/files/bar', get_module_path($module_name))),
         }
         EOS
         )
@@ -259,7 +259,7 @@ describe 'fileserver' do
           <<-EOS
         concat::fragment { 'foo':
           ensure => present,
-          content => file('foo/bar'),
+          content => file(sprintf('%s/files/bar', get_module_path($module_name))),
         }
         EOS
         )
@@ -289,7 +289,7 @@ describe 'fileserver' do
           <<-EOS
         file { 'foo':
           ensure => file,
-          content => file("foo/${bar}"),
+          content => file(sprintf("%s/files/${bar}", get_module_path($module_name))),
         }
         EOS
         )
@@ -319,7 +319,7 @@ describe 'fileserver' do
           <<-EOS
         file { 'foo':
           ensure => file,
-          content => file("${module_name}/${bar}"),
+          content => file(sprintf("%s/files/${bar}", get_module_path($module_name))),
         }
         EOS
         )
