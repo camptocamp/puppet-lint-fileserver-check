@@ -29,7 +29,23 @@ describe 'fileserver' do
         EOS
       }
 
-      it 'should detect a single problem' do
+      it 'should not detect any problem' do
+        expect(problems).to have(0).problem
+      end
+    end
+
+    context 'code using fileserver with puppet:/// and recurse=true' do
+      let(:code) {
+        <<-EOS
+        file { 'foo':
+          ensure  => file,
+          recurse => true,
+          source  => 'puppet:///modules/foo/bar',
+        }
+        EOS
+      }
+
+      it 'should not detect any problem' do
         expect(problems).to have(0).problem
       end
     end

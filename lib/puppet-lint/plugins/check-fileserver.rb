@@ -1,10 +1,18 @@
 PuppetLint.new_check(:fileserver) do
+  def token_attr(resource, name)
+    resource[:tokens].select do |t|
+      t.type == :NAME && t.value == name && \
+        t.next_code_token && t.next_code_token.type == :FARROW
+    end
+  end
+
   def check
     resource_indexes.each do |resource|
       attr = resource[:tokens].select do |t|
         t.prev_code_token && t.prev_code_token.type == :FARROW && t.value =~ %r{^puppet:///}
       end
       next if attr.empty?
+      next if resource[:type].value == 'file' and !token_attr(resource, 'recurse').empty? and token_attr(resource, 'recurse')[0].next_code_token.next_code_token.type == :TRUE
       notify :warning, {
         :message  => 'expected file() instead of fileserver',
         :line     => attr[0].line,
